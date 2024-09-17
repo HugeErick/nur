@@ -1,13 +1,20 @@
 import * as React from "react";
-import RemoveVideoBtn from "./buttons/RemoveVideoBtn";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface VideoThumbnailProps {
   src: string;
   filename?: string;
+  onRemove?: (filename: string) => void;
+  onSelect?: () => void;
+  isSelected?: boolean;
 }
 
-const VideoThumbnail: React.FC<VideoThumbnailProps> = ({ src, filename }) => {
+const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
+  src,
+  filename,
+  onSelect,
+  isSelected,
+}) => {
   const [thumbnail, setThumbnail] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -15,7 +22,6 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({ src, filename }) => {
     video.src = src;
     video.crossOrigin = "anonymous";
     video.currentTime = 1;
-
     video.addEventListener("loadeddata", () => {
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
@@ -29,7 +35,12 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({ src, filename }) => {
 
   return (
     <>
-      <div className="flex-none text-center">
+      <div
+        className={`flex-none text-center rounded-sm ${
+          isSelected ? "ring-2 ring-blue-500" : ""
+        }`}
+        onClick={onSelect}
+      >
         {thumbnail ? (
           <>
             <img
@@ -42,7 +53,6 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({ src, filename }) => {
                 <p className="m-1 text-sm dark:text-zinc-300 text-zinc700 truncate">
                   {filename}
                 </p>
-                <RemoveVideoBtn />
               </>
             )}
           </>

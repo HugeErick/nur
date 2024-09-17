@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   username: z
@@ -31,6 +33,8 @@ const formSchema = z.object({
 export default function NurUserform() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = React.useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -40,6 +44,7 @@ export default function NurUserform() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
     try {
       const response = await axios.post(
         "http://localhost:4000/api/login",
@@ -67,6 +72,8 @@ export default function NurUserform() {
         variant: "destructive",
         title: "Username or password wrong",
       });
+    } finally {
+      setIsLoading(false);
     }
   }
   return (
@@ -113,7 +120,16 @@ export default function NurUserform() {
               >
                 <span className="text-[16px]">Sign up</span>
               </Button>
-              <Button type="submit">Submit</Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Please wait
+                  </>
+                ) : (
+                  "Submit"
+                )}
+              </Button>
             </div>
           </form>
         </Form>

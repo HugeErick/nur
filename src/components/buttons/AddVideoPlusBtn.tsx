@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import {
   Drawer,
   DrawerClose,
@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { useNurVideoUpload } from "../../lib/useNurVideoUpload";
 import { useState } from "react";
 
-export default function AddVideoBtn() {
+export default function AddVideoPlusBtn() {
   const { uploading, handleFileChange, handleSubmit } = useNurVideoUpload();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -30,7 +30,13 @@ export default function AddVideoBtn() {
     <div>
       <Drawer>
         <DrawerTrigger asChild>
-          <Button>Add videos</Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="p-1 w-7 h-7 items-center mt-2"
+          >
+            <Plus className="w-5" />
+          </Button>
         </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>

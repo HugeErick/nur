@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -25,13 +26,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
+import VideosPanel from "../panels/VideosPanel";
+import { useNavigate } from "react-router-dom";
 
 const courseFormSchema = z.object({
-  coursename: z.string(),
-  coursedescription: z.string(),
+  coursename: z.string().min(1, "Course name is requiered"),
+  coursedescription: z.string().min(1, "Course description is requiered"),
 });
 
 export default function AddCourseSheet() {
+  const [selectedVideos, setSelectedVideos] = React.useState<string[]>([]);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const courseForm = useForm<z.infer<typeof courseFormSchema>>({
     resolver: zodResolver(courseFormSchema),
     defaultValues: {
@@ -40,11 +47,38 @@ export default function AddCourseSheet() {
     },
   });
 
+  const onVideoSelect = (videoUrl: string) => {
+    setSelectedVideos((prev) =>
+      prev.includes(videoUrl)
+        ? prev.filter((url) => url !== videoUrl)
+        : [...prev, videoUrl]
+    );
+  };
+
   async function onSubmit(values: z.infer<typeof courseFormSchema>) {
     try {
-      //something
+      const response = await axios.post(
+        "http://localhost:4000/api/courses/add",
+        {
+          ...values,
+          videos: selectedVideos,
+        },
+        { withCredentials: true }
+      );
+
+      toast({
+        title: "Course added successfully",
+        description: "Your new course has been created.",
+      });
+      courseForm.reset();
+      setSelectedVideos([]);
+      navigate(0);
     } catch (err) {
-      //something
+      toast({
+        title: "Failed to add course",
+        description: "There was an error creating your course.",
+        variant: "destructive",
+      });
     }
   }
 
@@ -55,7 +89,7 @@ export default function AddCourseSheet() {
           <SheetTrigger asChild>
             <Button> Add course </Button>
           </SheetTrigger>
-          <SheetContent side="left">
+          <SheetContent side="left" className="overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Add course</SheetTitle>
               <SheetDescription> Add videos to your course </SheetDescription>
@@ -103,13 +137,29 @@ export default function AddCourseSheet() {
                     </FormItem>
                   )}
                 />
+
+                <FormItem className="flex flex-col my-4">
+                  <h4 className="text-md">Add videos</h4>
+                  <FormControl>
+                    <div className="h-[250px] border rounded p-2">
+                      <VideosPanel
+                       onVideoSelect={onVideoSelect}
+                       selectedVideos={selectedVideos}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Select videos to add to your course
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
               </form>
             </Form>
             <SheetFooter>
               <SheetClose asChild>
                 <Button className="my-4" type="submit">
                   {" "}
-                  Save changes{" "}
+                  confirm{" "}
                 </Button>
               </SheetClose>
             </SheetFooter>

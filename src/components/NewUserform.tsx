@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z
   .object({
@@ -37,6 +39,8 @@ const formSchema = z
 export default function NewUserform() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = React.useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,6 +51,7 @@ export default function NewUserform() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
     try {
       const response = await axios.post(
         "http://localhost:4000/api/caccount",
@@ -74,6 +79,8 @@ export default function NewUserform() {
         title: "Something went wrong",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   }
   return (
@@ -127,7 +134,16 @@ export default function NewUserform() {
                 </FormItem>
               )}
             />
-            <Button type="submit">Submit</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Please wait
+                </>
+              ) : (
+                "Submit"
+              )}
+            </Button>
           </form>
         </Form>
       </div>

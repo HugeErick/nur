@@ -5,6 +5,7 @@ import AddVideoBtn from "@/components/buttons/AddVideoBtn";
 import { Label } from "@/components/ui/label";
 import VidPanelContainer from "@/components/panels/VidPanelContainer";
 import { useToast } from "@/components/ui/use-toast";
+import CoursesPanel from "@/components/panels/CoursesPanel";
 
 export default function AdminPage() {
   const [selectedVideos, setSelectedVideos] = React.useState<string[]>([]);
@@ -45,13 +46,13 @@ export default function AdminPage() {
   return (
     <div className="mt-24 mx-4">
       <div className="flex flex-col">
-        <Label className="text-4xl text-center m-2">Actions</Label>
+        <Label className="text-4xl text-center m-4">Actions</Label>
         <div className="flex flex-row justify-center gap-10">
           <AddCourseSheet />
           <AddAdminsBtn />
           <AddVideoBtn />
         </div>
-        {/* courses view panel */}
+        <CoursesPanel headerOfComponent="Courses" />
         <VidPanelContainer
           onVideoSelect={handleVideoSelect}
           selectedVideos={selectedVideos}

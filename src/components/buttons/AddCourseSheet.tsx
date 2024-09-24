@@ -8,7 +8,6 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetFooter,
-  SheetClose,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,12 +29,14 @@ import VideosPanel from "../panels/VideosPanel";
 import { useNavigate } from "react-router-dom";
 
 const courseFormSchema = z.object({
-  coursename: z.string().min(1, "Course name is requiered"),
-  coursedescription: z.string().min(1, "Course description is requiered"),
+  coursename: z.string().min(1, "Course name is required"),
+  coursedescription: z.string().min(1, "Course description is required"),
 });
 
 export default function AddCourseSheet() {
   const [selectedVideos, setSelectedVideos] = React.useState<string[]>([]);
+  const [, setAllVideos] = React.useState<string[]>([]);
+  const [isOpen, setIsOpen] = React.useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -66,13 +67,18 @@ export default function AddCourseSheet() {
         { withCredentials: true }
       );
 
-      toast({
-        title: "Course added successfully",
-        description: "Your new course has been created.",
-      });
-      courseForm.reset();
-      setSelectedVideos([]);
-      navigate(0);
+      if (response.status === 201) {
+        toast({
+          title: "Course added successfully",
+          description: "Your new course has been created.",
+        });
+        courseForm.reset();
+        setSelectedVideos([]);
+        setIsOpen(false);
+        navigate(0);
+      } else {
+        console.log("hola");
+      }
     } catch (err) {
       toast({
         title: "Failed to add course",
@@ -83,89 +89,91 @@ export default function AddCourseSheet() {
   }
 
   return (
-    <>
-      <div>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button> Add course </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Add course</SheetTitle>
-              <SheetDescription> Add videos to your course </SheetDescription>
-            </SheetHeader>
-            <Form {...courseForm}>
-              <form
-                className="flex flex-col"
-                onSubmit={courseForm.handleSubmit(onSubmit)}
-              >
-                <FormField
-                  control={courseForm.control}
-                  name="coursename"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          placeholder="course name"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        This is the name of your course
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={courseForm.control}
-                  name="coursedescription"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col my-4">
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Type a nice description"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription> Type your description </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormItem className="flex flex-col my-4">
-                  <h4 className="text-md">Add videos</h4>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button>Add course</Button>
+      </SheetTrigger>
+      <SheetContent
+        side="left"
+        className="overflow-y-auto w-[400px] sm:w-[540px]"
+      >
+        <SheetHeader>
+          <SheetTitle>Add course</SheetTitle>
+          <SheetDescription>Add videos to your course</SheetDescription>
+        </SheetHeader>
+        <Form {...courseForm}>
+          <form
+            className="flex flex-col space-y-4 py-4"
+            onSubmit={courseForm.handleSubmit(onSubmit)}
+          >
+            <FormField
+              control={courseForm.control}
+              name="coursename"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <div className="h-[250px] border rounded p-2">
-                      <VideosPanel
-                       onVideoSelect={onVideoSelect}
-                       selectedVideos={selectedVideos}
-                      />
-                    </div>
+                    <Input placeholder="Course name" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Select videos to add to your course
+                    Enter the name of your course
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
-              </form>
-            </Form>
+              )}
+            />
+
+            <FormField
+              control={courseForm.control}
+              name="coursedescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Type a nice description"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Provide a description for your course
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormItem>
+              <FormLabel>Add videos</FormLabel>
+              <FormControl>
+                <div className="h-[250px] border rounded p-2 overflow-y-auto">
+                  <VideosPanel
+                    onVideoSelect={onVideoSelect}
+                    selectedVideos={selectedVideos}
+                    setAllVideos={setAllVideos}
+                  />
+                </div>
+              </FormControl>
+              <FormDescription>
+                Select videos to add to your course
+              </FormDescription>
+            </FormItem>
+
             <SheetFooter>
-              <SheetClose asChild>
-                <Button className="my-4" type="submit">
-                  {" "}
-                  confirm{" "}
-                </Button>
-              </SheetClose>
+              <Button
+                type="submit"
+                disabled={courseForm.formState.isSubmitting}
+              >
+                {courseForm.formState.isSubmitting ? (
+                  <>Submitting...</>
+                ) : (
+                  <>Create Course</>
+                )}
+              </Button>
             </SheetFooter>
-          </SheetContent>
-        </Sheet>
-      </div>
-    </>
+          </form>
+        </Form>
+      </SheetContent>
+    </Sheet>
   );
 }

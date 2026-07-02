@@ -1,66 +1,42 @@
 <script lang="ts">
-// login page
-import * as z from "zod";
-import { Button } from "$lib/components/ui/button/index.js";
-import { Label } from "$lib/components/ui/label/index.js";
-import { Input } from "$lib/components/ui/input/index.js";
-import * as Card from "$lib/components/ui/card/index.js";
-import { LoaderCircle } from "@lucide/svelte";
+  // login page
+  import * as z from "zod";
+  import { Button } from "$lib/components/ui/button/index.js";
+  import { Label } from "$lib/components/ui/label/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
+  import * as Card from "$lib/components/ui/card/index.js";
+  import { LoaderCircle } from "@lucide/svelte";
+  import { enhance } from "$app/forms";
+  import type  { ActionData } from "./$types";
 
-let username = "";
-let password = "";
-let message = "";
-let isLoading = false;
+  let { form }: { form: ActionData } = $props();
+  let isLoading = $state(false);
 
-type LoginFields = z.infer<typeof loginSchema>;
-let errors: Partial<Record<keyof LoginFields, string[]>> = {};
+  type LoginFields = z.infer<typeof loginSchema>;
+  let errors: Partial<Record<keyof LoginFields, string[]>> = $state({});
 
-const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is requiered"),
-})
-.strict() // dont allow extra fields from request  
+  const loginSchema = z.object({
+    username: z.string().min(1, "Username is required"),
+    password: z.string().min(1, "Password is requiered"),
+  }).strict() // dont allow extra fields from request  
 
-
-async function handleLogin() {
-  errors = {}
-  message = "";
-
-  const result = loginSchema.safeParse({ username, password });
-
-  if (!result.success) {
-    const flat = result.error.issues.reduce((acc, issue) => {
+  function clientValidate(data: FormData): boolean {
+    errors = {};
+    const result = loginSchema.safeParse({
+      username: data.get("username"),
+      password: data.get("password"),
+    });
+    if (!result.success) {
+      errors = result.error.issues.reduce((acc, issue) => {
         const key = issue.path[0] as keyof LoginFields;
         if (key) acc[key] = [...(acc[key] ?? []), issue.message];
         return acc;
-    }, {} as Partial<Record<keyof LoginFields, string[]>>);
-    errors = flat;
-    return;
-  }
-
-  isLoading = true;
-  try {
-    const response = await fetch("https://nurichvsdiewelt.work/nur/nur-login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
-    });
-
-    const resultData = await response.json();
-
-    if (response.ok) {
-      message = "Logged in successfully!";
-      console.log("User data:", resultData.user);
-      // save resultData.user to a store or cookie here
-    } else {
-      message = resultData.error || "Login failed";
+      }, {} as Partial<Record<keyof LoginFields, string[]>>);
+      return false;
     }
-  } catch (err) {
-    message = "Could not connect to server";
-  } finally {
-    isLoading = false;
+    return true;
   }
-}
+
 </script>
 
 <section class="w-screen h-screen">
@@ -69,14 +45,24 @@ async function handleLogin() {
       <Card.Title class="text-3xl text-(--customGold)">Login</Card.Title>    
     </Card.Header>
 
-    <form on:submit|preventDefault={handleLogin}>
+    <form
+      method="POST"
+      use:enhance={({ formData, cancel }) => {
+        if (!clientValidate(formData)) { cancel(); return; }
+        isLoading = true;
+        return async ({ update }) => {
+          await update();
+          isLoading = false;
+        };
+      }}
+    >
       <Card.Content>
         <div class="flex flex-col gap-6">
           <div class="grid gap-2">
             <Label for="nur-username">Username</Label>
             <!-- TODO: make a funny list of -->
             <!-- famous people as usernames as placeholders  --> 
-            <Input id="nur-username" bind:value={username} placeholder="Magnus Carlsen" required />
+            <Input id="nur-username" name="username" placeholder="Magnus Carlsen" required />
             {#if errors.username}
               <p class="text-xs text-red-500">{errors.username[0]}</p>
             {/if}
@@ -93,7 +79,7 @@ async function handleLogin() {
                 </a>
               </Card.Description>
             </div>
-            <Input id="nur-password" bind:value={password} type="password" required />
+            <Input id="nur-password" name="password" type="password" required />
             {#if errors.password}
               <p class="text-xs text-red-500">{errors.password[0]}</p>
             {/if}
@@ -118,12 +104,11 @@ async function handleLogin() {
             {/if}
           </Button>
         </Card.Action>
-        {#if message}
+        {#if form?.message}
           <p
-            class="text-sm
-            {message.includes("success") ? "text-green-500" : "text-blue-500"}"
+            class="text-sm text-red-500"
           >
-            {message}
+            {form.message}
           </p>
         {/if}
       </Card.Footer>

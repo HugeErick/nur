@@ -11,7 +11,7 @@
   {@render children?.()}
   <Button
     variant="secondary"
-    class="absolute top-1 left-1 font-semibold text-lg rounded-md w-16 h-14"
+    class="absolute top-1 left-1 mt-1 ml-0.5 font-semibold text-lg rounded-md w-14 h-12"
     onclick={() => goto("/home")}
   >
     Nur

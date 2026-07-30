@@ -12,18 +12,25 @@ function isPublicRoute(pathname: string): boolean {
 
 export const handle: Handle = async ({ event, resolve }) => {
   const { pathname } = event.url;
-  const sessionCookie = event.cookies.get("nur_session");
+  const token = event.cookies.get("nur_session");
 
-  // make session available in event.locals for +page.server.ts / +layout.server.ts use
-  if (sessionCookie) {
+  event.locals.user = null;
+
+  if (token) {
     try {
-      event.locals.user = JSON.parse(sessionCookie);
+      const res = await event.fetch("https://nurichvsdiewelt.work/nur/nur-verify", {
+        headers: { Authorization: `Bearer ${token}`},
+      });
+      const data = await res.json();
+      if (data.valid) {
+        event.locals.user = data.user;
+      } else {
+        event.cookies.delete("nur_session", { path: "/"});
+      }
     } catch {
       event.locals.user = null;
     }
-  } else {
-    event.locals.user = null;
-  }
+  } 
 
   const isPublic = isPublicRoute(pathname);
 

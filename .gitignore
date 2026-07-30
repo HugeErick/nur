@@ -1,5 +1,9 @@
 node_modules
 
+/mNotes
+/mNotes*
+/mNote*
+
 # Output
 .output
 .vercel

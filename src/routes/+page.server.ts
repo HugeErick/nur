@@ -14,7 +14,11 @@ export const actions: Actions = {
       return fail(400, { message: "Username and password are required" });
     }
 
-    let resultData: { success?: boolean; user?: { id: number; username: string }; error?: string };
+    let resultData: {
+      success?: boolean;
+      user?: { id: number; username: string };
+      token?: string;
+      error?: string };
 
     try {
       const response = await fetch("https://nurichvsdiewelt.work/nur/nur-login", {
@@ -33,7 +37,7 @@ export const actions: Actions = {
     }
 
     // HttpOnly cookie — JS cannot read this
-    cookies.set("nur_session", JSON.stringify(resultData.user), {
+    cookies.set("nur_session", resultData.token, {
       path: "/",
       httpOnly: true,
       sameSite: "strict",
